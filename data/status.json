@@ -1,7 +1,7 @@
 {
-  "run_utc": "2026-11-18T14:04:39+00:00",
+  "run_utc": "2026-11-18T14:09:31+00:00",
   "cot": "ok rows=1942",
-  "gld_holdings": "FAILED: RuntimeError: https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.xlsx -> HTTPError: HTTP Error 404: Not Found ; https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.csv -> not data (b'%PDF-1.5')",
+  "gld_holdings": "ok rows=5533 src=https://api.spdrgoldshares.com/api/v1/historical-archive?exchange=NYSE&product=gld&lang=en",
   "fed_odds": "ok rows=250",
   "macro": "ok rows=3973"
 }
