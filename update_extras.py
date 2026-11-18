@@ -62,7 +62,11 @@ def cot():
 def gld_holdings():
     raw = get("https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.csv").decode("utf-8", "ignore")
     lines = raw.splitlines()
-    start = next(i for i, ln in enumerate(lines) if ln.strip().lower().startswith("date"))
+    clean = lambda ln: ln.strip().lstrip("\ufeff").strip('"').lower()
+    hits = [i for i, ln in enumerate(lines) if clean(ln).startswith("date") and "tonnes" in ln.lower()]
+    if not hits:
+        raise RuntimeError("no header row found; got: " + raw[:250].replace("\n", " | "))
+    start = hits[0]
     df = pd.read_csv(io.StringIO("\n".join(lines[start:])), skipinitialspace=True)
     df.columns = [c.strip() for c in df.columns]
     tcol = next(c for c in df.columns if "tonnes" in c.lower())
@@ -90,7 +94,9 @@ def fed_odds():
                 "event": m.get("event_ticker"), "ticker": m.get("ticker"),
                 "title": m.get("title"), "subtitle": m.get("yes_sub_title") or m.get("subtitle"),
                 "close_time": m.get("close_time"),
-                "last_price": m.get("last_price"), "yes_bid": m.get("yes_bid"), "yes_ask": m.get("yes_ask"),
+                **{k: v for k, v in m.items()
+                   if any(t in k for t in ("price", "bid", "ask", "volume", "open_interest"))
+                   and not isinstance(v, (dict, list))},
             })
     if not rows:
         raise RuntimeError("no open Kalshi Fed markets returned")
