@@ -96,7 +96,9 @@ def gld_holdings():
                     cands.append(urllib.parse.urljoin(page, href))
         except Exception:  # noqa: BLE001
             pass
-    cands += ["https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.xlsx",
+    cands += ["https://api.spdrgoldshares.com/api/v1/historical-archive?exchange=NYSE&product=gld&lang=en",
+              "https://api.spdrgoldshares.com/api/v1/historical-archive?product=gld&exchange=NYSE&lang=en&format=xlsx",
+              "https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.xlsx",
               "https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.csv"]
     tried = []
     for url in dict.fromkeys(cands):
