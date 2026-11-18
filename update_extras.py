@@ -59,26 +59,66 @@ def cot():
 
 
 # ---------------- SPDR GLD holdings ----------------
-def gld_holdings():
-    raw = get("https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.csv").decode("utf-8", "ignore")
-    lines = raw.splitlines()
-    clean = lambda ln: ln.strip().lstrip("\ufeff").strip('"').lower()
-    hits = [i for i, ln in enumerate(lines) if clean(ln).startswith("date") and "tonnes" in ln.lower()]
-    if not hits:
-        raise RuntimeError("no header row found; got: " + raw[:250].replace("\n", " | "))
-    start = hits[0]
-    df = pd.read_csv(io.StringIO("\n".join(lines[start:])), skipinitialspace=True)
-    df.columns = [c.strip() for c in df.columns]
-    tcol = next(c for c in df.columns if "tonnes" in c.lower())
-    ocol = next((c for c in df.columns if "ounces" in c.lower()), None)
-    out = pd.DataFrame({"date": pd.to_datetime(df["Date"], errors="coerce", dayfirst=True)})
-    out["tonnes"] = pd.to_numeric(df[tcol].astype(str).str.replace(",", ""), errors="coerce")
+def _holdings_from_table(df):
+    """df: raw sheet/CSV with no header. Find the header row with 'Date' and 'Tonnes'."""
+    hdr = None
+    for i in range(min(len(df), 60)):
+        vals = [str(v).strip().lower() for v in df.iloc[i].tolist()]
+        if any(v.startswith("date") for v in vals) and any("tonnes" in v for v in vals):
+            hdr = i
+            break
+    if hdr is None:
+        return None
+    t = df.iloc[hdr + 1:].copy()
+    t.columns = [str(c).strip() for c in df.iloc[hdr].tolist()]
+    dcol = next(c for c in t.columns if c.lower().startswith("date"))
+    tcol = next(c for c in t.columns if "tonnes" in c.lower())
+    ocol = next((c for c in t.columns if "ounces" in c.lower()), None)
+    out = pd.DataFrame({"date": pd.to_datetime(t[dcol], errors="coerce", dayfirst=True)})
+    num = lambda c: pd.to_numeric(t[c].astype(str).str.replace(",", "").str.strip(), errors="coerce")
+    out["tonnes"] = num(tcol)
     if ocol:
-        out["ounces"] = pd.to_numeric(df[ocol].astype(str).str.replace(",", ""), errors="coerce")
+        out["ounces"] = num(ocol)
     out = out.dropna(subset=["date", "tonnes"]).sort_values("date")
     out["date"] = out["date"].dt.strftime("%Y-%m-%d")
-    out = out.drop_duplicates("date", keep="last")
-    return save(out, "gld_holdings.csv")
+    return out.drop_duplicates("date", keep="last")
+
+
+def gld_holdings():
+    import re
+    cands = []
+    for page in ("https://www.spdrgoldshares.com/usa/historical-data/",
+                 "https://www.spdrgoldshares.com/usa/gld/"):
+        try:
+            html = get(page).decode("utf-8", "ignore")
+            for href in re.findall(r'href="([^"]+\.(?:xlsx|csv)[^"]*)"', html, re.I):
+                if "gld" in href.lower() and "gldm" not in href.lower():
+                    cands.append(urllib.parse.urljoin(page, href))
+        except Exception:  # noqa: BLE001
+            pass
+    cands += ["https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.xlsx",
+              "https://www.spdrgoldshares.com/assets/dynamic/GLD/GLD_US_archive_EN.csv"]
+    tried = []
+    for url in dict.fromkeys(cands):
+        try:
+            raw = get(url)
+            if raw[:2] == b"PK":
+                sheets = pd.read_excel(io.BytesIO(raw), sheet_name=None, header=None)
+            elif raw[:4] == b"%PDF" or raw[:20].lstrip().startswith(b"<"):
+                tried.append(f"{url} -> not data ({raw[:8]!r})")
+                continue
+            else:
+                txt = raw.decode("utf-8", "ignore").lstrip("\ufeff")
+                sheets = {"csv": pd.read_csv(io.StringIO(txt), header=None, dtype=str,
+                                             on_bad_lines="skip", engine="python")}
+            for sh in sheets.values():
+                out = _holdings_from_table(sh)
+                if out is not None and len(out):
+                    return save(out, "gld_holdings.csv") + f" src={url}"
+            tried.append(f"{url} -> no Date/Tonnes header")
+        except Exception as e:  # noqa: BLE001
+            tried.append(f"{url} -> {type(e).__name__}: {e}")
+    raise RuntimeError(" ; ".join(tried))
 
 
 # ---------------- Kalshi Fed odds ----------------
