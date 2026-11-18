@@ -1,0 +1,7 @@
+{
+  "run_utc": "2026-11-18T13:57:47+00:00",
+  "cot": "ok rows=1942",
+  "gld_holdings": "FAILED: StopIteration: ",
+  "fed_odds": "ok rows=250",
+  "macro": "ok rows=3973"
+}
