@@ -1,7 +1,7 @@
 {
-  "run_utc": "2026-11-18T13:57:47+00:00",
+  "run_utc": "2026-11-18T13:59:25+00:00",
   "cot": "ok rows=1942",
-  "gld_holdings": "FAILED: StopIteration: ",
+  "gld_holdings": "FAILED: RuntimeError: no header row found; got: %PDF-1.5\r | %\r | 2 0 obj\r | <<\r | /Type /XObject\r | /Subtype /Image\r | /Width 1489\r | /Height 680\r | /ColorSpace /DeviceGray\r | /BitsPerComponent 8\r | /Interpolate false\r | /Filter /FlateDecode\r | /Length 15691\r | >>\r | stream\r | xw@\u0003\u000e=\u0005\u0678\u0011\u0004=\u02b2\u07b3,We(+^JM\u001c",
   "fed_odds": "ok rows=250",
   "macro": "ok rows=3973"
 }
