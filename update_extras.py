@@ -73,12 +73,15 @@ def _holdings_from_table(df):
     t.columns = [str(c).strip() for c in df.iloc[hdr].tolist()]
     dcol = next(c for c in t.columns if c.lower().startswith("date"))
     tcol = next(c for c in t.columns if "tonnes" in c.lower())
-    ocol = next((c for c in t.columns if "ounces" in c.lower()), None)
+    ocol = next((c for c in t.columns if "ounces" in c.lower() and "share" not in c.lower()), None)
+    pcol = next((c for c in t.columns if "ounces" in c.lower() and "share" in c.lower()), None)
     out = pd.DataFrame({"date": pd.to_datetime(t[dcol], errors="coerce", dayfirst=True)})
     num = lambda c: pd.to_numeric(t[c].astype(str).str.replace(",", "").str.strip(), errors="coerce")
     out["tonnes"] = num(tcol)
     if ocol:
         out["ounces"] = num(ocol)
+    if pcol:
+        out["oz_per_share"] = num(pcol)
     out = out.dropna(subset=["date", "tonnes"]).sort_values("date")
     out["date"] = out["date"].dt.strftime("%Y-%m-%d")
     return out.drop_duplicates("date", keep="last")
