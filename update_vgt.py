@@ -22,7 +22,8 @@ import pandas as pd
 
 OUT = "vgt"
 UA = {"User-Agent": "Mozilla/5.0 (gld-data bot; github.com/anandtpatel/gld-data)"}
-PEERS = ["SPY", "QQQ", "XLK", "SOXX", "AAPL", "MSFT", "NVDA", "AVGO", "ORCL", "CRM", "AMD", "CSCO"]
+PEERS = ["SPY", "QQQ", "XLK", "SOXX", "AAPL", "NVDA", "MSFT", "AVGO", "MU", "AMD", "CSCO", "PLTR",
+         "AMAT", "PANW", "ORCL", "CRM"]
 COLS = ["Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"]
 status = {"run_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -58,11 +59,9 @@ def _yf(tickers, period):
 
 # ---------------- VGT prices ----------------
 def vgt_prices():
-    path = os.path.join(OUT, "vgt_10y.csv")
-    have = pd.read_csv(path) if os.path.exists(path) else None
-    period = "10y" if have is None or have.empty else "1mo"
+    # Full 10y refresh every run: Yahoo split-adjusts history, so appending would mix bases.
     try:
-        df = _yf(["VGT"], period)
+        df = _yf(["VGT"], "10y")
         if isinstance(df.columns, pd.MultiIndex):
             df = df["VGT"]
         df = df.reset_index()
@@ -75,7 +74,7 @@ def vgt_prices():
             raise RuntimeError(f"yahoo failed ({e}); stooq returned no rows")
         new["Adj Close"] = float("nan")  # stooq: no adjusted column
         new, src = new[COLS], "stooq"
-    df = new if have is None else pd.concat([have, new])
+    df = new.dropna(subset=["Close"])  # drop unfinished / blank bars
     df = df.drop_duplicates("Date", keep="last").sort_values("Date").reset_index(drop=True)
     cutoff = (pd.Timestamp.today() - pd.DateOffset(years=10, days=7)).strftime("%Y-%m-%d")
     df = df[df["Date"] >= cutoff]
@@ -86,20 +85,16 @@ def vgt_prices():
 
 # ---------------- Peers / top holdings prices ----------------
 def peers():
-    path = os.path.join(OUT, "peers.csv")
-    have = pd.read_csv(path) if os.path.exists(path) else None
-    period = "10y" if have is None or have.empty else "1mo"
-    df = _yf(PEERS, period)
+    df = _yf(PEERS, "10y")  # full refresh: split-safe
     rows = []
     for t in PEERS:
         if t not in df.columns.get_level_values(0):
             continue
-        s = df[t][["Close", "Adj Close"]].dropna(how="all").reset_index()
+        s = df[t][["Close", "Adj Close"]].dropna(subset=["Close"]).reset_index()
         s["Date"] = pd.to_datetime(s["Date"]).dt.strftime("%Y-%m-%d")
         s.insert(1, "Ticker", t)
         rows.append(s)
-    new = pd.concat(rows)
-    out = new if have is None else pd.concat([have, new])
+    out = pd.concat(rows)
     out = (out.drop_duplicates(["Date", "Ticker"], keep="last")
               .sort_values(["Ticker", "Date"]).reset_index(drop=True))
     for c in ["Close", "Adj Close"]:
