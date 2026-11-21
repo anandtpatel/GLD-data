@@ -1,7 +1,7 @@
 {
-  "run_utc": "2026-11-21T01:54:59+00:00",
-  "vgt_prices": "ok rows=2513 src=yahoo last=2026-11-19",
-  "peers": "ok rows=39238 tickers=16",
+  "run_utc": "2026-11-21T03:13:07+00:00",
+  "vgt_prices": "ok rows=2514 src=yahoo last=2026-11-20",
+  "peers": "ok rows=39254 tickers=16",
   "fund_snapshot": "ok rows=1",
   "top_holdings": "ok rows=10",
   "cot_nasdaq": "ok rows=1431 last=2026-11-17",
