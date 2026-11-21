@@ -1,7 +1,7 @@
 {
-  "run_utc": "2026-11-20T20:41:36+00:00",
+  "run_utc": "2026-11-21T01:41:57+00:00",
   "cot": "ok rows=1943",
   "gld_holdings": "ok rows=5535 src=https://api.spdrgoldshares.com/api/v1/historical-archive?exchange=NYSE&product=gld&lang=en",
-  "fed_odds": "ok rows=750",
-  "macro": "ok rows=3975"
+  "fed_odds": "ok rows=1000",
+  "macro": "ok rows=3976"
 }
