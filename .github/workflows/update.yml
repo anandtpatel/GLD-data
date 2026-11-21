@@ -9,6 +9,7 @@ on:
     paths:
       - "update_gld.py"
       - "update_extras.py"
+      - "update_vgt.py"
       - ".github/workflows/update.yml"
 
 permissions:
@@ -27,11 +28,13 @@ jobs:
         continue-on-error: true
       - run: python update_extras.py
         continue-on-error: true
+      - run: python update_vgt.py
+        continue-on-error: true
       - name: Commit if changed
         run: |
           git config user.name "gld-bot"
           git config user.email "gld-bot@users.noreply.github.com"
           git pull --rebase --autostash || true
-          git add gld_10y.csv data/
-          git diff --cached --quiet || git commit -m "GLD prices $(date -u +%F)"
+          git add gld_10y.csv data/ vgt/
+          git diff --cached --quiet || git commit -m "GLD + VGT data $(date -u +%F)"
           git push
