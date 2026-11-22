@@ -6,7 +6,8 @@ Each source is independent: one failing doesn't stop the others.
   vgt/fund_snapshot.csv    Daily snapshot: VGT total assets, NAV, implied shares outstanding (appended)
   vgt/top_holdings.csv     Latest VGT top-10 holdings and weights (snapshot, appended daily)
   vgt/cot_nasdaq.csv       CFTC TFF, E-mini Nasdaq-100 (209742): leveraged funds / asset managers + legacy non-comm
-  vgt/macro.csv            FRED: VIXCLS, VXNCLS, DFII10, DGS10, DFF
+  vgt/macro.csv            FRED: VIXCLS, VXNCLS, DFII10, DGS10, DFF; dates FRED hasn't posted yet are
+                           filled from Cboe / Treasury / NY Fed (Yahoo last resort), flagged in status.json
   vgt/status.json          what succeeded / failed on the last run
 Fed odds are shared with GLD: data/fed_odds.csv.
 """
@@ -174,8 +175,100 @@ def macro():
         f.columns = ["date", sid]
         f[sid] = pd.to_numeric(f[sid], errors="coerce")
         frames.append(f.set_index("date"))
-    df = pd.concat(frames, axis=1).reset_index().sort_values("date")
-    return save(df, "macro.csv")
+    df = pd.concat(frames, axis=1).sort_index()
+    # FRED lags ~1 business day. Fill newer dates from the primary publishers
+    # (FRED's own upstream sources), with Yahoo as a last resort. FRED values are
+    # never overwritten; filled values are listed in status.json as provisional.
+    fills, errs = [], []
+    for sid, fns in MACRO_FALLBACKS.items():
+        fred_last = df[sid].dropna().index.max()
+        for src, fn in fns:
+            try:
+                s = fn().dropna()
+                s = s[s.index > fred_last]
+                if s.empty:
+                    continue
+                for d, v in s.items():  # all dates are newer than FRED's last value
+                    df.loc[d, sid] = round(float(v), 4)
+                df = df.sort_index()
+                fills.append(f"{sid}->{s.index.max()}({src})")
+                break
+            except Exception as e:  # noqa: BLE001
+                errs.append(f"{sid}/{src}: {type(e).__name__}")
+    df = df.reset_index().rename(columns={"index": "date"}).sort_values("date")
+    last = ", ".join(f"{c}={df.loc[df[c].notna(), 'date'].max()}" for c in MACRO_IDS)
+    msg = save(df, "macro.csv") + f" last: {last}"
+    if fills:
+        msg += " | provisional (not yet on FRED): " + "; ".join(fills)
+    if errs:
+        msg += " | fallback errors: " + "; ".join(errs)
+    return msg
+
+
+# ---------- Fallbacks for the FRED lag (each returns a date-indexed Series) ----------
+MACRO_IDS = ("VIXCLS", "VXNCLS", "DFII10", "DGS10", "DFF")
+
+
+def _iso(idx):
+    return pd.DatetimeIndex(pd.to_datetime(idx, errors="coerce")).strftime("%Y-%m-%d")
+
+
+def _cboe(index):
+    # https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv  -> DATE,OPEN,HIGH,LOW,CLOSE
+    raw = get(f"https://cdn.cboe.com/api/global/us_indices/daily_prices/{index}_History.csv").decode()
+    f = pd.read_csv(io.StringIO(raw))
+    f.columns = [c.strip().upper() for c in f.columns]
+    s = pd.to_numeric(f["CLOSE"], errors="coerce")
+    s.index = _iso(f["DATE"])
+    return s[s.index.notna()].tail(30)
+
+
+def _yahoo_close(ticker):
+    df = _yf([ticker], "1mo")
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df[ticker]
+    s = df["Close"].astype(float)
+    if ticker == "^TNX" and s.median() > 20:  # older Yahoo convention: yield x10
+        s = s / 10
+    s.index = _iso(s.index)
+    return s
+
+
+def _treasury_10y(kind):
+    # Treasury daily par yield CSVs (MM/DD/YYYY, newest first). kind: real | nominal
+    typ = "daily_treasury_real_yield_curve" if kind == "real" else "daily_treasury_yield_curve"
+    out = []
+    year = datetime.now(timezone.utc).year
+    for y in (year - 1, year):  # covers January
+        url = ("https://home.treasury.gov/resource-center/data-chart-center/interest-rates/"
+               f"daily-treasury-rates.csv/{y}/all?type={typ}&field_tdr_date_value={y}&page&_format=csv")
+        try:
+            f = pd.read_csv(io.StringIO(get(url).decode()))
+        except Exception:  # noqa: BLE001
+            if y == year:
+                raise
+            continue
+        col = next(c for c in f.columns if c.strip().upper().replace(" ", "") in ("10YR", "10YEAR"))
+        s = pd.to_numeric(f[col], errors="coerce")
+        s.index = _iso(f["Date"])
+        out.append(s)
+    return pd.concat(out).sort_index()
+
+
+def _nyfed_effr():
+    j = json.loads(get("https://markets.newyorkfed.org/api/rates/unsecured/effr/last/10.json"))
+    recs = j.get("refRates", [])
+    s = pd.Series({r["effectiveDate"][:10]: float(r["percentRate"]) for r in recs if r.get("percentRate") is not None})
+    return s.sort_index()
+
+
+MACRO_FALLBACKS = {
+    "VIXCLS": [("cboe", lambda: _cboe("VIX")), ("yahoo", lambda: _yahoo_close("^VIX"))],
+    "VXNCLS": [("cboe", lambda: _cboe("VXN")), ("yahoo", lambda: _yahoo_close("^VXN"))],
+    "DFII10": [("treasury", lambda: _treasury_10y("real"))],
+    "DGS10": [("treasury", lambda: _treasury_10y("nominal")), ("yahoo", lambda: _yahoo_close("^TNX"))],
+    "DFF": [("nyfed", _nyfed_effr)],
+}
 
 
 def main():
