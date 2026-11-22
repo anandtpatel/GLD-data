@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VGT Daily Check</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--mute:#6b7280;--line:#e5e7eb;--ok:#15803d;--okbg:#dcfce7;--no:#b91c1c;--nobg:#fee2e2;--warn:#a16207;--warnbg:#fef3c7;--acc:#2563eb;--accbg:#dbeafe}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b21;--ink:#e8eaee;--mute:#9aa1ad;--line:#2a2f38;--ok:#4ade80;--okbg:#12301d;--no:#f87171;--nobg:#3a1515;--warn:#fbbf24;--warnbg:#3a2c0b;--acc:#60a5fa;--accbg:#13284a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px}
+.wrap{max-width:560px;margin:0 auto;display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+h1{font-size:13px;font-weight:600;color:var(--mute);margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em}
+h2{font-size:16px;margin:0 0 10px}
+.verdict{background:var(--warnbg);border-color:transparent}
+.verdict .big{font-size:24px;font-weight:800;color:var(--warn)}
+.verdict p{margin:6px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.kpi{background:var(--bg);border-radius:10px;padding:8px}
+.kpi b{display:block;font-size:18px}
+.kpi span{font-size:12px;color:var(--mute)}
+.neg{color:var(--no)}
+/* ladder */
+.ladder{position:relative;height:330px;margin:4px 0 0 0}
+.axis{position:absolute;left:92px;top:0;bottom:0;width:6px;border-radius:3px;background:linear-gradient(to top,var(--okbg),var(--line) 40%,var(--line))}
+.mk{position:absolute;left:0;right:0;transform:translateY(50%);display:flex;align-items:center;gap:8px;font-size:13px}
+.mk .px{width:80px;text-align:right;font-weight:700}
+.mk .dot{width:14px;height:14px;border-radius:50%;margin-left:-2px;border:2px solid var(--card);flex:none}
+.mk .lbl{color:var(--mute)}
+.mk.now .px{color:var(--acc)} .mk.now .dot{background:var(--acc);width:18px;height:18px;margin-left:-4px}
+.mk.now .lbl{color:var(--acc);font-weight:700}
+.d-buy{background:var(--ok)} .d-line{background:var(--mute)} .d-cap{background:var(--warn)}
+/* signals */
+.sig{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pill{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.p-no{background:var(--nobg);color:var(--no)} .p-lock{background:var(--line);color:var(--mute)}
+.row{display:grid;grid-template-columns:22px 1fr auto;gap:8px;padding:8px 0;border-top:1px solid var(--line);align-items:start}
+.row:first-of-type{border-top:0}
+.ic{font-weight:900;text-align:center}
+.ic.y{color:var(--ok)} .ic.n{color:var(--no)}
+.row small{display:block;color:var(--mute);font-size:12.5px}
+.gap{font-weight:700;font-size:13px;text-align:right;white-space:nowrap}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.plain{margin:10px 0 0;padding:10px;background:var(--bg);border-radius:10px;font-size:14px}
+.budget{display:flex;gap:4px;margin-top:6px}
+.budget i{flex:1;height:10px;border-radius:3px;background:var(--line)}
+ul.ctx{margin:0;padding:0;list-style:none}
+ul.ctx li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+ul.ctx li:first-child{border-top:0}
+ul.ctx li span:first-child{color:var(--mute)}
+ul.ctx li span:last-child{text-align:right}
+.foot{font-size:12px;color:var(--mute)}
+.foot p{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card verdict">
+    <h1>VGT · close of Fri Nov 20, 2026</h1>
+    <div class="big">NO EXTRA today</div>
+    <p>Keep the regular Friday DCA. Nearest trigger: <b>close ≤ $90.86</b> (−6.9% from here) → <b>+4 weeks</b>.</p>
+  </div>
+
+  <div class="card">
+    <h1>Where it is</h1>
+    <div class="kpis">
+      <div class="kpi"><b>$97.64</b><span>close</span></div>
+      <div class="kpi"><b class="neg">−7.0%</b><span>on the day</span></div>
+      <div class="kpi"><b class="neg">−24.8%</b><span>from ATH $129.80</span></div>
+    </div>
+    <p class="foot" style="margin:8px 0 0">Sell-off began Nov 20. Below SMA10 $108.48 · SMA50 $119.47 · SMA200 $110.58.</p>
+  </div>
+
+  <div class="card">
+    <h1>Price ladder: where it needs to be</h1>
+    <div class="ladder">
+      <div class="axis"></div>
+      <!-- scale 88 → 122 ; bottom% = (p-88)/34*100 -->
+      <div class="mk" style="bottom:92.6%"><span class="px">$119.47</span><span class="dot d-line"></span><span class="lbl">SMA50 (Signal 2 B, needs washout too)</span></div>
+      <div class="mk" style="bottom:66.7%"><span class="px">$110.67</span><span class="dot d-line"></span><span class="lbl">SMA200 (Signal 3, later)</span></div>
+      <div class="mk" style="bottom:59.1%"><span class="px">$108.09</span><span class="dot d-line"></span><span class="lbl">SMA10 (Signal 1 needs above)</span></div>
+      <div class="mk" style="bottom:46.6%"><span class="px">$103.84</span><span class="dot d-cap"></span><span class="lbl">−20% line (Signal 1 needs at/below)</span></div>
+      <div class="mk now" style="bottom:28.4%"><span class="px">$97.64</span><span class="dot"></span><span class="lbl">◀ NOW</span></div>
+      <div class="mk" style="bottom:8.4%"><span class="px">$90.86</span><span class="dot d-buy"></span><span class="lbl"><b style="color:var(--ok)">−30%: Signal 2 → +4 weeks</b></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sig"><h2>Signal 1 · +2 weeks</h2><span class="pill p-no">Not yet</span></div>
+    <div class="row"><span class="ic y">✓</span><div>Down 20%+ from high<small>Now −24.8% · needs close ≤ $103.84</small></div><span class="gap">met</span></div>
+    <div class="row"><span class="ic n">✗</span><div>Close above SMA10<small>Next close must beat $108.09</small></div><span class="gap">+$10.45<br>+10.7%</span></div>
+    <div class="row"><span class="ic y">✓</span><div>No AAPL/NVDA/MSFT earnings in 2 days<small>NVDA done · AAPL ~Jan 28, MSFT ~Jan 27 (estimates)</small></div><span class="gap">clear</span></div>
+    <p class="plain">Can't fire Monday: it would need to close above $108.09 <i>and</i> at or below $103.84. If VGT stays flat, those overlap on <b>Fri Nov 27</b>. A close between <b>$103.15 and $103.84</b> would trigger it then.</p>
+  </div>
+
+  <div class="card">
+    <div class="sig"><h2>Signal 2 · +4 weeks</h2><span class="pill p-no">Not yet</span></div>
+    <div class="row"><span class="ic n">✗</span><div><b>Route A:</b> down 30%<small>Needs close ≤ $90.86</small></div><span class="gap">−$6.78<br>−6.9%</span></div>
+    <div class="row"><span class="ic n">✗</span><div><b>Route B:</b> close above SMA50<small>Needs close &gt; $119.47</small></div><span class="gap">+$21.83<br>+22.4%</span></div>
+    <div class="row"><span class="ic n">✗</span><div>…and washout<small>Leveraged funds 85th pct (need ≤ 10th) · VXN 45.3 at a 1-yr high, 0% off its 20-day high (need ≥ 10% off)</small></div><span class="gap">not yet</span></div>
+    <p class="plain">Fastest path: another <b>~7% drop</b>. Route B needs a ~22% rally <i>plus</i> fear starting to ease, so it isn't close.</p>
+  </div>
+
+  <div class="card">
+    <div class="sig"><h2>Signal 3 · +4 weeks</h2><span class="pill p-lock">Locked</span></div>
+    <p class="foot" style="margin:0">Unlocks after Signal 1 fires. Then: 5 straight closes above SMA200 (~$110.67), or SMA50 crossing above SMA200.</p>
+  </div>
+
+  <div class="card">
+    <h1>Extra budget</h1>
+    <div class="sig"><span>0 of 10 weeks used this sell-off</span><span class="foot">month: 4 weeks open · no pause</span></div>
+    <div class="budget"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <div class="card">
+    <h1>Context</h1>
+    <ul class="ctx">
+      <li><span>VGT vs SPY (1 mo)</span><span>−18.8% vs −10.3% · <b class="neg">−8.5 pts</b></span></li>
+      <li><span>Leveraged funds net</span><span>−10,928 · 85th pct (3y)</span></li>
+      <li><span>Asset managers net</span><span>+82,900 · 76th pct (3y)</span></li>
+      <li><span>VXN / VIX</span><span>45.3 (1-yr high) / 35.9 · provisional</span></li>
+      <li><span>10y real yield</span><span>2.77% (−0.11 Fri; flat 1 mo; ↑ from 2.35% 3 mo)</span></li>
+      <li><span>Dec 9 Fed odds</span><span>Hike 89% · Hold 8% (−1) · Hike&gt;25 3% (+1)</span></li>
+      <li><span>Headline</span><span>AI chip rout Fri: NVDA −14%, MU −14%, AMD −13%</span></li>
+    </ul>
+  </div>
+
+  <div class="card foot">
+    <p><b>Data checked:</b> vgt_10y &amp; peers Nov 20 · top_holdings Nov 22 · COT Nov 17 (weekly) · macro Nov 20 (VIX/VXN/yields provisional via Cboe/Treasury; fed funds Nov 19) · Fed odds Nov 22 14:58 UTC · status OK.</p>
+    <p>Gaps: no new close since Friday (weekend); earnings dates are estimates. Not exhaustive. Informational only, not financial advice.</p>
+  </div>
+
+</div>
+</body>
+</html>
