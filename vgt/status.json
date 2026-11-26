@@ -1,9 +1,9 @@
 {
-  "run_utc": "2026-11-25T21:57:59+00:00",
+  "run_utc": "2026-11-26T04:10:08+00:00",
   "vgt_prices": "ok rows=2513 src=yahoo last=2026-11-25",
   "peers": "ok rows=39242 tickers=16",
-  "fund_snapshot": "ok rows=4",
-  "top_holdings": "ok rows=40",
+  "fund_snapshot": "ok rows=5",
+  "top_holdings": "ok rows=50",
   "cot_nasdaq": "ok rows=1431 last=2026-11-17",
-  "macro": "ok rows=3982 last: VIXCLS=2026-11-25, VXNCLS=2026-11-24, DFII10=2026-11-25, DGS10=2026-11-25, DFF=2026-11-24 | provisional (not yet on FRED): VIXCLS->2026-11-25(yahoo); DFII10->2026-11-25(treasury); DGS10->2026-11-25(treasury)"
+  "macro": "ok rows=3982 last: VIXCLS=2026-11-25, VXNCLS=2026-11-25, DFII10=2026-11-25, DGS10=2026-11-25, DFF=2026-11-24 | provisional (not yet on FRED): VIXCLS->2026-11-25(cboe); VXNCLS->2026-11-25(cboe); DFII10->2026-11-25(treasury); DGS10->2026-11-25(treasury)"
 }
